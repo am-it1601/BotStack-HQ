@@ -1,0 +1,11 @@
+{
+  "name": "@botstackhq/document-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BotStackHQ ComplianceStack Document AI service (Python FastAPI). package.json present so Turborepo can orchestrate build/lint/test alongside the TS apps.",
+  "scripts": {
+    "build": "python -m compileall -q app",
+    "lint": "node -e \"process.exit(0)\"",
+    "test": "node -e \"process.exit(0)\""
+  }
+}

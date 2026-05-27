@@ -1,0 +1,248 @@
+<svg width="100%" viewBox="0 0 680 1060" xmlns="http://www.w3.org/2000/svg" role="img" style="font-family: Arial, sans-serif; background: #ffffff;">
+  <title>BotStackHQ Phase 1 — ComplianceStack Architecture</title>
+  <desc>Layered system architecture showing actors, channels, API Gateway, Lambda functions, async layer, LLM layer, data layer, auth, document AI, CI/CD and observability on AWS ap-south-1.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .label-title { font-size: 14px; font-weight: 600; font-family: Arial, sans-serif; }
+      .label-sub   { font-size: 12px; font-weight: 400; font-family: Arial, sans-serif; }
+      .layer-label { font-size: 10px; font-weight: 400; font-family: Arial, sans-serif; fill: #888780; }
+      .arr         { stroke: #B4B2A9; stroke-width: 1; fill: none; }
+      .container   { fill: none; stroke: #D3D1C7; stroke-width: 0.5; stroke-dasharray: 3 3; }
+      /* Actor */
+      .actor-fill  { fill: #F1EFE8; stroke: #5F5E5A; stroke-width: 0.5; }
+      .actor-title { fill: #444441; }
+      .actor-sub   { fill: #5F5E5A; }
+      /* Channel */
+      .chan-fill   { fill: #E1F5EE; stroke: #0F6E56; stroke-width: 0.5; }
+      .chan-title  { fill: #085041; }
+      .chan-sub    { fill: #0F6E56; }
+      /* API / Lambda */
+      .api-fill    { fill: #E6F1FB; stroke: #185FA5; stroke-width: 0.5; }
+      .api-title   { fill: #0C447C; }
+      .api-sub     { fill: #185FA5; }
+      /* Auth / LLM */
+      .llm-fill    { fill: #EEEDFE; stroke: #534AB7; stroke-width: 0.5; }
+      .llm-title   { fill: #3C3489; }
+      .llm-sub     { fill: #534AB7; }
+      /* Async */
+      .async-fill  { fill: #FAEEDA; stroke: #854F0B; stroke-width: 0.5; }
+      .async-title { fill: #633806; }
+      .async-sub   { fill: #854F0B; }
+      /* DLQ */
+      .dlq-fill    { fill: #FCEBEB; stroke: #A32D2D; stroke-width: 0.5; }
+      .dlq-title   { fill: #791F1F; }
+      /* Doc AI */
+      .doc-fill    { fill: #E1F5EE; stroke: #0F6E56; stroke-width: 0.5; }
+      .doc-title   { fill: #085041; }
+      .doc-sub     { fill: #0F6E56; }
+      /* Data */
+      .data-fill   { fill: #F1EFE8; stroke: #5F5E5A; stroke-width: 0.5; }
+      .data-title  { fill: #444441; }
+      .data-sub    { fill: #5F5E5A; }
+      /* Observability */
+      .obs-fill    { fill: #EAF3DE; stroke: #3B6D11; stroke-width: 0.5; }
+      .obs-title   { fill: #27500A; }
+      .obs-sub     { fill: #3B6D11; }
+      /* CICD */
+      .cicd-fill   { fill: #FAECE7; stroke: #993C1D; stroke-width: 0.5; }
+      .cicd-title  { fill: #712B13; }
+      .cicd-sub    { fill: #993C1D; }
+    </style>
+  </defs>
+
+  <!-- ── ROW 0: ACTORS ──────────────────────────────────────── -->
+  <rect x="100" y="24" width="160" height="44" rx="8" class="actor-fill"/>
+  <text x="180" y="43" text-anchor="middle" dominant-baseline="central" class="label-title actor-title">CA / Legal firm</text>
+  <text x="180" y="59" text-anchor="middle" dominant-baseline="central" class="label-sub actor-sub">Dashboard user</text>
+
+  <rect x="420" y="24" width="160" height="44" rx="8" class="actor-fill"/>
+  <text x="500" y="43" text-anchor="middle" dominant-baseline="central" class="label-title actor-title">Client / Mr X</text>
+  <text x="500" y="59" text-anchor="middle" dominant-baseline="central" class="label-sub actor-sub">WhatsApp user</text>
+
+  <line x1="180" y1="68" x2="180" y2="110" class="arr" marker-end="url(#arrow)"/>
+  <line x1="500" y1="68" x2="500" y2="110" class="arr" marker-end="url(#arrow)"/>
+
+  <!-- ── ROW 1: CHANNELS ────────────────────────────────────── -->
+  <rect x="56" y="112" width="568" height="58" rx="10" class="container"/>
+  <text x="66" y="126" class="layer-label">Channels</text>
+
+  <rect x="72" y="124" width="190" height="38" rx="7" class="chan-fill"/>
+  <text x="167" y="138" text-anchor="middle" dominant-baseline="central" class="label-title chan-title">S3 + CloudFront</text>
+  <text x="167" y="154" text-anchor="middle" dominant-baseline="central" class="label-sub chan-sub">CA dashboard</text>
+
+  <rect x="418" y="124" width="190" height="38" rx="7" class="chan-fill"/>
+  <text x="513" y="138" text-anchor="middle" dominant-baseline="central" class="label-title chan-title">WhatsApp Cloud API</text>
+  <text x="513" y="154" text-anchor="middle" dominant-baseline="central" class="label-sub chan-sub">Meta official</text>
+
+  <line x1="180" y1="170" x2="180" y2="208" class="arr" marker-end="url(#arrow)"/>
+  <line x1="500" y1="170" x2="500" y2="208" class="arr" marker-end="url(#arrow)"/>
+
+  <!-- ── ROW 2: API GATEWAY + AUTH ─────────────────────────── -->
+  <rect x="56" y="210" width="568" height="70" rx="10" class="container"/>
+  <text x="66" y="224" class="layer-label">API Gateway  |  ap-south-1</text>
+
+  <rect x="72"  y="222" width="148" height="50" rx="7" class="api-fill"/>
+  <text x="146" y="241" text-anchor="middle" dominant-baseline="central" class="label-title api-title">REST API</text>
+  <text x="146" y="257" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">Dashboard calls</text>
+
+  <rect x="232" y="222" width="148" height="50" rx="7" class="api-fill"/>
+  <text x="306" y="241" text-anchor="middle" dominant-baseline="central" class="label-title api-title">WebSocket API</text>
+  <text x="306" y="257" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">Real-time push</text>
+
+  <rect x="392" y="222" width="148" height="50" rx="7" class="api-fill"/>
+  <text x="466" y="241" text-anchor="middle" dominant-baseline="central" class="label-title api-title">Webhook handler</text>
+  <text x="466" y="257" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">WhatsApp events</text>
+
+  <rect x="552" y="222" width="64" height="50" rx="7" class="llm-fill"/>
+  <text x="584" y="241" text-anchor="middle" dominant-baseline="central" class="label-title llm-title">AuthKit</text>
+  <text x="584" y="257" text-anchor="middle" dominant-baseline="central" class="label-sub llm-sub">JWT · RBAC</text>
+
+  <line x1="220" y1="280" x2="220" y2="318" class="arr" marker-end="url(#arrow)"/>
+  <line x1="340" y1="280" x2="340" y2="318" class="arr" marker-end="url(#arrow)"/>
+  <line x1="460" y1="280" x2="460" y2="318" class="arr" marker-end="url(#arrow)"/>
+
+  <!-- ── ROW 3: LAMBDA CORE ─────────────────────────────────── -->
+  <rect x="56" y="320" width="568" height="120" rx="10" class="container"/>
+  <text x="66" y="334" class="layer-label">Lambda functions  —  NestJS (TypeScript)</text>
+
+  <rect x="72"  y="342" width="98" height="86" rx="7" class="api-fill"/>
+  <text x="121" y="368" text-anchor="middle" dominant-baseline="central" class="label-title api-title">API handler</text>
+  <text x="121" y="386" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">REST endpoints</text>
+  <text x="121" y="402" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">Dashboard logic</text>
+
+  <rect x="182" y="342" width="98" height="86" rx="7" class="api-fill"/>
+  <text x="231" y="368" text-anchor="middle" dominant-baseline="central" class="label-title api-title">Webhook hdlr</text>
+  <text x="231" y="386" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">Classifies msgs</text>
+  <text x="231" y="402" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">Routes to SQS</text>
+
+  <rect x="292" y="342" width="98" height="86" rx="7" class="api-fill"/>
+  <text x="341" y="368" text-anchor="middle" dominant-baseline="central" class="label-title api-title">Workflow engine</text>
+  <text x="341" y="386" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">Filing workflows</text>
+  <text x="341" y="402" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">State management</text>
+
+  <rect x="402" y="342" width="98" height="86" rx="7" class="api-fill"/>
+  <text x="451" y="368" text-anchor="middle" dominant-baseline="central" class="label-title api-title">AI agent</text>
+  <text x="451" y="386" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">LLM conversation</text>
+  <text x="451" y="402" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">RAG retrieval</text>
+
+  <rect x="512" y="342" width="100" height="86" rx="7" class="api-fill"/>
+  <text x="562" y="368" text-anchor="middle" dominant-baseline="central" class="label-title api-title">Notification</text>
+  <text x="562" y="386" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">WhatsApp send</text>
+  <text x="562" y="402" text-anchor="middle" dominant-baseline="central" class="label-sub api-sub">Confirmation</text>
+
+  <line x1="230" y1="440" x2="230" y2="474" class="arr" marker-end="url(#arrow)"/>
+  <line x1="341" y1="440" x2="341" y2="474" class="arr" marker-end="url(#arrow)"/>
+  <line x1="451" y1="440" x2="451" y2="474" class="arr" marker-end="url(#arrow)"/>
+  <line x1="562" y1="440" x2="562" y2="474" class="arr" marker-end="url(#arrow)"/>
+
+  <!-- ── ROW 4: ASYNC ───────────────────────────────────────── -->
+  <rect x="56" y="476" width="568" height="70" rx="10" class="container"/>
+  <text x="66" y="490" class="layer-label">Async layer</text>
+
+  <rect x="72"  y="488" width="130" height="50" rx="7" class="async-fill"/>
+  <text x="137" y="507" text-anchor="middle" dominant-baseline="central" class="label-title async-title">EventBridge</text>
+  <text x="137" y="523" text-anchor="middle" dominant-baseline="central" class="label-sub async-sub">Filing triggers</text>
+
+  <rect x="214" y="488" width="110" height="50" rx="7" class="async-fill"/>
+  <text x="269" y="507" text-anchor="middle" dominant-baseline="central" class="label-title async-title">SQS — docs</text>
+  <text x="269" y="523" text-anchor="middle" dominant-baseline="central" class="label-sub async-sub">Doc processing</text>
+
+  <rect x="336" y="488" width="110" height="50" rx="7" class="async-fill"/>
+  <text x="391" y="507" text-anchor="middle" dominant-baseline="central" class="label-title async-title">SQS — WA</text>
+  <text x="391" y="523" text-anchor="middle" dominant-baseline="central" class="label-sub async-sub">WA dispatch</text>
+
+  <rect x="458" y="488" width="110" height="50" rx="7" class="async-fill"/>
+  <text x="513" y="507" text-anchor="middle" dominant-baseline="central" class="label-title async-title">SQS — LLM</text>
+  <text x="513" y="523" text-anchor="middle" dominant-baseline="central" class="label-sub async-sub">LLM inference</text>
+
+  <rect x="580" y="488" width="36" height="50" rx="7" class="dlq-fill"/>
+  <text x="598" y="513" text-anchor="middle" dominant-baseline="central" class="label-title dlq-title">DLQ</text>
+
+  <path d="M137 488 L137 428 L292 428" class="arr" stroke-dasharray="3 2" marker-end="url(#arrow)"/>
+
+  <line x1="269" y1="546" x2="269" y2="584" class="arr" marker-end="url(#arrow)"/>
+  <line x1="513" y1="546" x2="480" y2="584" class="arr" marker-end="url(#arrow)"/>
+
+  <!-- ── ROW 5A: DOCUMENT AI ────────────────────────────────── -->
+  <rect x="72" y="586" width="380" height="56" rx="9" class="doc-fill"/>
+  <text x="262" y="607" text-anchor="middle" dominant-baseline="central" class="label-title doc-title">Document AI  —  Python FastAPI Lambda (container)</text>
+  <text x="262" y="625" text-anchor="middle" dominant-baseline="central" class="label-sub doc-sub">PyMuPDF · pdfplumber · pytesseract · field extraction · validation</text>
+
+  <!-- ── ROW 5B: LLM ────────────────────────────────────────── -->
+  <rect x="462" y="586" width="162" height="120" rx="10" class="container"/>
+  <text x="472" y="600" class="layer-label">LLM layer</text>
+
+  <rect x="470" y="607" width="146" height="34" rx="6" class="llm-fill"/>
+  <text x="543" y="624" text-anchor="middle" dominant-baseline="central" class="label-title llm-title">LangChain.js</text>
+
+  <rect x="470" y="649" width="68" height="50" rx="6" class="llm-fill"/>
+  <text x="504" y="667" text-anchor="middle" dominant-baseline="central" class="label-title llm-title">GPT-4o</text>
+  <text x="504" y="683" text-anchor="middle" dominant-baseline="central" class="label-sub llm-sub">Primary</text>
+
+  <rect x="548" y="649" width="68" height="50" rx="6" class="llm-fill"/>
+  <text x="582" y="667" text-anchor="middle" dominant-baseline="central" class="label-title llm-title">Claude</text>
+  <text x="582" y="683" text-anchor="middle" dominant-baseline="central" class="label-sub llm-sub">Fallback</text>
+
+  <line x1="262" y1="642" x2="262" y2="728" class="arr" marker-end="url(#arrow)"/>
+  <line x1="543" y1="706" x2="410" y2="728" class="arr" marker-end="url(#arrow)"/>
+
+  <!-- ── ROW 6: DATA ────────────────────────────────────────── -->
+  <rect x="56" y="730" width="568" height="80" rx="10" class="container"/>
+  <text x="66" y="744" class="layer-label">Data layer  —  ap-south-1</text>
+
+  <rect x="72"  y="752" width="220" height="50" rx="7" class="data-fill"/>
+  <text x="182" y="771" text-anchor="middle" dominant-baseline="central" class="label-title data-title">RDS PostgreSQL + pgvector</text>
+  <text x="182" y="787" text-anchor="middle" dominant-baseline="central" class="label-sub data-sub">All data · Vector store · RLS</text>
+
+  <rect x="304" y="752" width="160" height="50" rx="7" class="data-fill"/>
+  <text x="384" y="771" text-anchor="middle" dominant-baseline="central" class="label-title data-title">S3</text>
+  <text x="384" y="787" text-anchor="middle" dominant-baseline="central" class="label-sub data-sub">Document storage</text>
+
+  <rect x="476" y="752" width="140" height="50" rx="7" class="data-fill"/>
+  <text x="546" y="771" text-anchor="middle" dominant-baseline="central" class="label-title data-title">Secrets Manager</text>
+  <text x="546" y="787" text-anchor="middle" dominant-baseline="central" class="label-sub data-sub">API keys · DB creds</text>
+
+  <!-- ── ROW 7: OBS + CICD ──────────────────────────────────── -->
+  <rect x="56" y="840" width="280" height="74" rx="10" class="container"/>
+  <text x="66" y="854" class="layer-label">Observability</text>
+
+  <rect x="68"  y="862" width="120" height="44" rx="7" class="obs-fill"/>
+  <text x="128" y="881" text-anchor="middle" dominant-baseline="central" class="label-title obs-title">CloudWatch</text>
+  <text x="128" y="897" text-anchor="middle" dominant-baseline="central" class="label-sub obs-sub">Logs · Alerts</text>
+
+  <rect x="200" y="862" width="128" height="44" rx="7" class="obs-fill"/>
+  <text x="264" y="881" text-anchor="middle" dominant-baseline="central" class="label-title obs-title">X-Ray</text>
+  <text x="264" y="897" text-anchor="middle" dominant-baseline="central" class="label-sub obs-sub">Distributed tracing</text>
+
+  <rect x="348" y="840" width="276" height="74" rx="10" class="container"/>
+  <text x="358" y="854" class="layer-label">CI/CD</text>
+
+  <rect x="360" y="862" width="120" height="44" rx="7" class="cicd-fill"/>
+  <text x="420" y="881" text-anchor="middle" dominant-baseline="central" class="label-title cicd-title">GitHub Actions</text>
+  <text x="420" y="897" text-anchor="middle" dominant-baseline="central" class="label-sub cicd-sub">Build · Test · Deploy</text>
+
+  <rect x="492" y="862" width="124" height="44" rx="7" class="cicd-fill"/>
+  <text x="554" y="881" text-anchor="middle" dominant-baseline="central" class="label-title cicd-title">AWS CDK</text>
+  <text x="554" y="897" text-anchor="middle" dominant-baseline="central" class="label-sub cicd-sub">Infrastructure code</text>
+
+  <!-- ── LEGEND ─────────────────────────────────────────────── -->
+  <rect x="56"  y="940" width="12" height="12" rx="2" class="actor-fill"/>
+  <text x="74"  y="950" class="label-sub data-sub">Actors / data</text>
+  <rect x="148" y="940" width="12" height="12" rx="2" class="chan-fill"/>
+  <text x="166" y="950" class="label-sub data-sub">Channels</text>
+  <rect x="220" y="940" width="12" height="12" rx="2" class="api-fill"/>
+  <text x="238" y="950" class="label-sub data-sub">API Gateway / Lambda</text>
+  <rect x="358" y="940" width="12" height="12" rx="2" class="llm-fill"/>
+  <text x="376" y="950" class="label-sub data-sub">Auth / LLM</text>
+  <rect x="436" y="940" width="12" height="12" rx="2" class="async-fill"/>
+  <text x="454" y="950" class="label-sub data-sub">Async</text>
+  <rect x="492" y="940" width="12" height="12" rx="2" class="obs-fill"/>
+  <text x="510" y="950" class="label-sub data-sub">Observability</text>
+  <rect x="578" y="940" width="12" height="12" rx="2" class="cicd-fill"/>
+  <text x="596" y="950" class="label-sub data-sub">CI/CD</text>
+
+  <text x="340" y="980" text-anchor="middle" class="label-sub data-sub">AWS ap-south-1 (Mumbai)  —  All primary data and compute</text>
+</svg>

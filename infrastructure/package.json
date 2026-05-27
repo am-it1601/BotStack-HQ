@@ -1,0 +1,24 @@
+{
+  "name": "@botstackhq/infrastructure",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BotStackHQ ComplianceStack — AWS CDK infrastructure as code (ap-south-1).",
+  "scripts": {
+    "build": "tsc",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy",
+    "diff": "cdk diff",
+    "lint": "node -e \"process.exit(0)\"",
+    "test": "node -e \"process.exit(0)\""
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.158.0",
+    "constructs": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.5",
+    "aws-cdk": "^2.158.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}

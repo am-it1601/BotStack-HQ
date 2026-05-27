@@ -1,0 +1,18 @@
+# BotStackHQ ComplianceStack — Document AI service (ADD §08)
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+python-multipart==0.0.9
+
+# PDF parsing / OCR / extraction
+PyMuPDF==1.24.10
+pdfplumber==0.11.4
+unstructured==0.15.13
+pytesseract==0.3.13
+
+# AWS (S3 document fetch, Lambda runtime helpers)
+boto3==1.35.24
+
+# Dev / test
+pytest==8.3.3
+mangum==0.18.0

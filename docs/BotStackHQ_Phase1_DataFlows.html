@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotStackHQ Phase 1 — Critical Data Flows</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 14px; color: #111928; background: #ffffff; padding: 32px 24px; max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; color: #111928; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #6B7280; margin-bottom: 24px; }
+  .flow-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .ftab { padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #D1D5DB; color: #6B7280; background: #F9FAFB; transition: all 0.15s; white-space: nowrap; }
+  .ftab:hover { border-color: #9CA3AF; color: #374151; }
+  .ftab.active { background: #EBF5FF; color: #1A56DB; border-color: #1A56DB; font-weight: 500; }
+  .flow-panel { display: none; }
+  .flow-panel.active { display: block; }
+  .flow-header { font-size: 15px; font-weight: 600; color: #111928; margin-bottom: 4px; }
+  .flow-desc { font-size: 12px; color: #6B7280; margin-bottom: 16px; }
+  .step { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #F3F4F6; }
+  .step:last-child { border-bottom: none; }
+  .step-num { min-width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+  .step-body { flex: 1; }
+  .step-label { font-size: 13px; font-weight: 500; color: #111928; margin-bottom: 3px; }
+  .step-sub { font-size: 12px; color: #6B7280; line-height: 1.5; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; margin-right: 4px; font-weight: 500; }
+  .divider { height: 1px; background: #F3F4F6; margin: 20px 0; }
+  footer { margin-top: 32px; font-size: 11px; color: #9CA3AF; border-top: 1px solid #F3F4F6; padding-top: 16px; }
+</style>
+</head>
+<body>
+
+<h1>BotStackHQ — Phase 1 Critical Data Flows</h1>
+<p class="subtitle">ComplianceStack MVP  ·  CipherCru Innovations  ·  2026  ·  AWS ap-south-1 (Mumbai)</p>
+
+<div class="flow-tabs">
+  <button class="ftab active" onclick="show('f1',this)">Flow 1 — Inbound client message</button>
+  <button class="ftab" onclick="show('f2',this)">Flow 2 — Filing calendar trigger</button>
+  <button class="ftab" onclick="show('f3',this)">Flow 3 — Document upload</button>
+  <button class="ftab" onclick="show('f4',this)">Flow 4 — Post-filing confirmation</button>
+</div>
+
+<!-- FLOW 1 -->
+<div id="f1" class="flow-panel active">
+  <div class="flow-header">Flow 1 — Inbound Client Message (WhatsApp)</div>
+  <div class="flow-desc">Client sends a message — query, reply, or document — via WhatsApp. Agent processes and responds.</div>
+  <div class="step"><div class="step-num" style="background:#E1F5EE;color:#0F6E56">1</div><div class="step-body"><div class="step-label">Client sends WhatsApp message</div><div class="step-sub">Text query, document upload, or reply to input collection request</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E1F5EE;color:#0F6E56">2</div><div class="step-body"><div class="step-label">Meta API → API Gateway webhook handler</div><div class="step-sub">Signature verified (X-Hub-Signature-256). Timestamp validated — events older than 5 min rejected</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E6F1FB;color:#185FA5">3</div><div class="step-body"><div class="step-label">Webhook Handler Lambda — classify intent</div><div class="step-sub"><span class="badge" style="background:#E1F5EE;color:#0F6E56">text</span><span class="badge" style="background:#FAEEDA;color:#854F0B">document</span><span class="badge" style="background:#EEEDFE;color:#534AB7">status update</span></div></div></div>
+  <div class="step"><div class="step-num" style="background:#FAEEDA;color:#854F0B">4</div><div class="step-body"><div class="step-label">Enqueue → SQS LLM inference queue</div><div class="step-sub">Message routed for AI agent processing. Visibility timeout: 300s</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E6F1FB;color:#185FA5">5</div><div class="step-body"><div class="step-label">AI Agent Lambda → LangChain.js → GPT-4o</div><div class="step-sub">pgvector RAG retrieval if knowledge base context needed. Claude Sonnet fallback for complex queries</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E6F1FB;color:#185FA5">6</div><div class="step-body"><div class="step-label">Response generated → SQS WhatsApp dispatch queue</div><div class="step-sub">Conversation state written to RDS PostgreSQL. Token usage logged</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E6F1FB;color:#185FA5">7</div><div class="step-body"><div class="step-label">Notification Lambda → Meta WhatsApp API → Client</div><div class="step-sub">Message delivered. Delivery receipt logged to RDS</div></div></div>
+  <div class="step"><div class="step-num" style="background:#EAF3DE;color:#3B6D11">8</div><div class="step-body"><div class="step-label">WebSocket push → CA dashboard</div><div class="step-sub">New client message visible in conversation monitor in real-time</div></div></div>
+</div>
+
+<!-- FLOW 2 -->
+<div id="f2" class="flow-panel">
+  <div class="flow-header">Flow 2 — Filing Calendar Trigger (Automated)</div>
+  <div class="flow-desc">EventBridge fires at the configured lead time before a filing deadline. Agent collects inputs from client automatically — no CA intervention needed unless client is unresponsive.</div>
+  <div class="step"><div class="step-num" style="background:#FAEEDA;color:#854F0B">1</div><div class="step-body"><div class="step-label">EventBridge Scheduler fires — T-12 days before deadline</div><div class="step-sub">One-time schedule per client per filing. Created automatically at client onboarding</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E6F1FB;color:#185FA5">2</div><div class="step-body"><div class="step-label">Workflow Engine Lambda triggered</div><div class="step-sub">Fetch client filing config, WhatsApp number, and filing type details from RDS</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E6F1FB;color:#185FA5">3</div><div class="step-body"><div class="step-label">AI Agent generates input collection message</div><div class="step-sub">Filing-type specific: GSTR-1 requests sales register; GSTR-3B requests ITC details and purchase data</div></div></div>
+  <div class="step"><div class="step-num" style="background:#FAEEDA;color:#854F0B">4</div><div class="step-body"><div class="step-label">SQS WhatsApp dispatch → Notification Lambda → Client</div><div class="step-sub">Meta pre-approved template message sent. Delivery confirmed</div></div></div>
+  <div class="step"><div class="step-num" style="background:#F1EFE8;color:#5F5E5A">5</div><div class="step-body"><div class="step-label">Workflow state updated in RDS</div><div class="step-sub">Status: input_requested. Next EventBridge trigger scheduled: T-7 days</div></div></div>
+  <div class="step"><div class="step-num" style="background:#FAEEDA;color:#854F0B">6</div><div class="step-body"><div class="step-label">T-7 reminder fires if no client response</div><div class="step-sub">Gentle reminder dispatched via WhatsApp. T-3 escalation trigger scheduled</div></div></div>
+  <div class="step"><div class="step-num" style="background:#FAEEDA;color:#854F0B">7</div><div class="step-body"><div class="step-label">T-3 escalation — CA notified + urgent client reminder</div><div class="step-sub">CA receives dashboard alert and WhatsApp notification. Client gets urgent reminder message</div></div></div>
+  <div class="step"><div class="step-num" style="background:#EAF3DE;color:#3B6D11">8</div><div class="step-body"><div class="step-label">Client responds → inputs collected → CA notified</div><div class="step-sub">Workflow state: inputs_complete. CA dashboard alert. Ready to file</div></div></div>
+</div>
+
+<!-- FLOW 3 -->
+<div id="f3" class="flow-panel">
+  <div class="flow-header">Flow 3 — Document Upload from Client</div>
+  <div class="flow-desc">Client uploads a PDF (GST certificate, TDS certificate, invoice) via WhatsApp. Document AI extracts structured fields and validates completeness.</div>
+  <div class="step"><div class="step-num" style="background:#E1F5EE;color:#0F6E56">1</div><div class="step-body"><div class="step-label">Client sends PDF via WhatsApp</div><div class="step-sub">GST certificate, TDS certificate, invoice, or other compliance document</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E6F1FB;color:#185FA5">2</div><div class="step-body"><div class="step-label">Webhook Handler downloads media from Meta API</div><div class="step-sub">Authenticated download using media URL from webhook payload</div></div></div>
+  <div class="step"><div class="step-num" style="background:#F1EFE8;color:#5F5E5A">3</div><div class="step-body"><div class="step-label">File uploaded to S3</div><div class="step-sub">Key pattern: workspaces/{workspace_id}/clients/{client_id}/filings/{filing_id}/{filename}</div></div></div>
+  <div class="step"><div class="step-num" style="background:#F1EFE8;color:#5F5E5A">4</div><div class="step-body"><div class="step-label">S3 key written to RDS document record</div><div class="step-sub">Status: uploaded, awaiting_extraction</div></div></div>
+  <div class="step"><div class="step-num" style="background:#FAEEDA;color:#854F0B">5</div><div class="step-body"><div class="step-label">SQS document processing queue → Python FastAPI Lambda</div><div class="step-sub">Document AI service triggered. Container Lambda with 3GB memory, 300s timeout</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E1F5EE;color:#0F6E56">6</div><div class="step-body"><div class="step-label">Field extraction — GSTIN, ARN, turnover, period, TDS amounts</div><div class="step-sub">PyMuPDF + pdfplumber for text PDFs. pytesseract OCR for scanned documents</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E1F5EE;color:#0F6E56">7</div><div class="step-body"><div class="step-label">Validate against filing checklist</div><div class="step-sub">All required fields present? Values plausible? Filing period matches expected? GSTIN format valid?</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E6F1FB;color:#185FA5">8</div><div class="step-body"><div class="step-label">If incomplete → Notification Lambda → client (missing fields)</div><div class="step-sub">Agent sends specific list of missing or incorrect fields. Client re-uploads</div></div></div>
+  <div class="step"><div class="step-num" style="background:#EAF3DE;color:#3B6D11">9</div><div class="step-body"><div class="step-label">If complete → CA notified — inputs ready to file</div><div class="step-sub">Dashboard alert + structured data summary. WebSocket push updates filing status live</div></div></div>
+</div>
+
+<!-- FLOW 4 -->
+<div id="f4" class="flow-panel">
+  <div class="flow-header">Flow 4 — Post-Filing Confirmation</div>
+  <div class="flow-desc">CA files the report on the government portal (external action), then marks it complete in BotStackHQ. Agent automatically sends a confirmation to the client with ARN and filing details.</div>
+  <div class="step"><div class="step-num" style="background:#F1EFE8;color:#5F5E5A">1</div><div class="step-body"><div class="step-label">CA files report on GST / TDS portal (external action)</div><div class="step-sub">CA acts outside BotStackHQ on the government portal. This is a licensed professional act</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E6F1FB;color:#185FA5">2</div><div class="step-body"><div class="step-label">CA marks filing complete on dashboard</div><div class="step-sub">Enters ARN number and filing date in BotStackHQ dashboard</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E6F1FB;color:#185FA5">3</div><div class="step-body"><div class="step-label">API Handler Lambda updates filing record in RDS</div><div class="step-sub">Status: filed. ARN, filing date, and CA user ID recorded with timestamp</div></div></div>
+  <div class="step"><div class="step-num" style="background:#E6F1FB;color:#185FA5">4</div><div class="step-body"><div class="step-label">Workflow Engine triggered — filing confirmed event</div><div class="step-sub">Confirmation workflow initiated for this client + filing combination</div></div></div>
+  <div class="step"><div class="step-num" style="background:#EEEDFE;color:#534AB7">5</div><div class="step-body"><div class="step-label">Confirmation Agent generates message</div><div class="step-sub">Personalised per client — includes ARN, filing type, period covered, date filed</div></div></div>
+  <div class="step"><div class="step-num" style="background:#FAEEDA;color:#854F0B">6</div><div class="step-body"><div class="step-label">SQS WhatsApp dispatch → Notification Lambda → Client</div><div class="step-sub">Filing confirmation delivered to Mr X via WhatsApp. Delivery receipt logged</div></div></div>
+  <div class="step"><div class="step-num" style="background:#F1EFE8;color:#5F5E5A">7</div><div class="step-body"><div class="step-label">Immutable audit log entry written to RDS</div><div class="step-sub">Timestamp, workspace_id, user_id, ARN, delivery status — full trail, append-only</div></div></div>
+  <div class="step"><div class="step-num" style="background:#EAF3DE;color:#3B6D11">8</div><div class="step-body"><div class="step-label">WebSocket push → CA dashboard — status: confirmed</div><div class="step-sub">Filing turns green. Cycle complete. No reverse follow-up needed from client</div></div></div>
+</div>
+
+<footer>BotStackHQ  ·  Architecture Decision Document — Phase 1  ·  CipherCru Innovations  ·  2026  ·  Confidential</footer>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.flow-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+build/
+cdk.out/
+.turbo/
+coverage/
+**/*.py
+package-lock.json
