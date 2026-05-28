@@ -35,20 +35,10 @@ export interface ApiError {
 }
 
 /** Workspace member roles (ADD §12 Authentication & Authorization). */
-export type WorkspaceRole =
-  | 'workspace_owner'
-  | 'ca_admin'
-  | 'ca_member'
-  | 'agency_admin';
+export type WorkspaceRole = 'workspace_owner' | 'ca_admin' | 'ca_member' | 'agency_admin';
 
 /** Compliance filing types supported in Phase 1 (ADD §08, Product Overview). */
-export type FilingType =
-  | 'GSTR-1'
-  | 'GSTR-3B'
-  | 'TDS'
-  | 'ADVANCE_TAX'
-  | 'ITR'
-  | 'FORM_16';
+export type FilingType = 'GSTR-1' | 'GSTR-3B' | 'TDS' | 'ADVANCE_TAX' | 'ITR' | 'FORM_16';
 
 /** Lifecycle status of a single filing for a client. */
 export type FilingStatus =

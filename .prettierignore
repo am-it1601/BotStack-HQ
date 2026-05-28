@@ -6,3 +6,9 @@ cdk.out/
 coverage/
 **/*.py
 package-lock.json
+
+# External stakeholder docs — authored content, do not auto-reformat
+docs/
+
+# Auto-installed Python runtime (see .gitignore)
+apps/document-ai/Python/

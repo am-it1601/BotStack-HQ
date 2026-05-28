@@ -20,4 +20,4 @@ A `package.json` is present so Turborepo can orchestrate this service alongside
 the TypeScript apps:
 
 - `build` → `python -m compileall -q app` (byte-compile check; no install required)
-- `test`  → placeholder (wire up `pytest` as tests are added)
+- `test` → placeholder (wire up `pytest` as tests are added)

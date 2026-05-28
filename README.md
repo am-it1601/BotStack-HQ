@@ -23,13 +23,13 @@ botstackhq/
 
 ## Tech Stack (per ADD — LOCKED)
 
-| Layer | Choice |
-|-------|--------|
-| Backend | NestJS (Node.js / TypeScript) on AWS Lambda |
-| Frontend | React + TypeScript + TanStack Query + Zustand, built with Vite |
-| Document AI | Python FastAPI (PyMuPDF, pdfplumber, Unstructured, pytesseract) |
-| Infrastructure | AWS CDK (TypeScript), region `ap-south-1` (Mumbai) |
-| Monorepo | npm workspaces + Turborepo |
+| Layer          | Choice                                                          |
+| -------------- | --------------------------------------------------------------- |
+| Backend        | NestJS (Node.js / TypeScript) on AWS Lambda                     |
+| Frontend       | React + TypeScript + TanStack Query + Zustand, built with Vite  |
+| Document AI    | Python FastAPI (PyMuPDF, pdfplumber, Unstructured, pytesseract) |
+| Infrastructure | AWS CDK (TypeScript), region `ap-south-1` (Mumbai)              |
+| Monorepo       | npm workspaces + Turborepo                                      |
 
 ## Prerequisites
 
