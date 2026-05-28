@@ -5,7 +5,7 @@
   "description": "BotStackHQ ComplianceStack Document AI service (Python FastAPI). package.json present so Turborepo can orchestrate build/lint/test alongside the TS apps.",
   "scripts": {
     "build": "python -m compileall -q app",
-    "lint": "node -e \"process.exit(0)\"",
+    "lint": "python -m ruff check app",
     "test": "node -e \"process.exit(0)\""
   }
 }

@@ -23,13 +23,13 @@ botstackhq/
 
 ## Tech Stack (per ADD — LOCKED)
 
-| Layer | Choice |
-|-------|--------|
-| Backend | NestJS (Node.js / TypeScript) on AWS Lambda |
-| Frontend | React + TypeScript + TanStack Query + Zustand, built with Vite |
-| Document AI | Python FastAPI (PyMuPDF, pdfplumber, Unstructured, pytesseract) |
-| Infrastructure | AWS CDK (TypeScript), region `ap-south-1` (Mumbai) |
-| Monorepo | npm workspaces + Turborepo |
+| Layer          | Choice                                                          |
+| -------------- | --------------------------------------------------------------- |
+| Backend        | NestJS (Node.js / TypeScript) on AWS Lambda                     |
+| Frontend       | React + TypeScript + TanStack Query + Zustand, built with Vite  |
+| Document AI    | Python FastAPI (PyMuPDF, pdfplumber, Unstructured, pytesseract) |
+| Infrastructure | AWS CDK (TypeScript), region `ap-south-1` (Mumbai)              |
+| Monorepo       | npm workspaces + Turborepo                                      |
 
 ## Prerequisites
 
@@ -70,6 +70,18 @@ python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\act
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
+
+## Code Quality Hooks
+
+Every commit runs through two Husky hooks:
+
+- **`pre-commit`** → `lint-staged` lints and formats only the files staged in the current commit:
+  - `*.{ts,tsx,js,jsx,cjs,mjs}` → `eslint --fix --max-warnings 0` then `prettier --write`
+  - `*.{json,md,yml,yaml}` → `prettier --write`
+  - `apps/document-ai/**/*.py` → `python -m ruff check --fix`
+- **`commit-msg`** → `commitlint` validates the message against [Conventional Commits](https://www.conventionalcommits.org/).
+
+CI runs the full `turbo run lint` across every workspace on every PR — so even if a developer bypasses the local hook with `--no-verify`, broken code can't merge.
 
 ## Commit Convention
 
