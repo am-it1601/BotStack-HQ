@@ -149,6 +149,9 @@ Never write status/comments to a task you haven't confirmed is the right one.
 
 Once the task is confirmed, move its status to **"In Progress"**. (Match the Space's actual status name — don't invent statuses.)
 
+- Work on individual Subtask if exits,
+- Once subtask is done, make a commit, update the status of the subtask to "shipped"
+
 ### 7.3 On completion
 
 After self-check passes and the repo report is written:
