@@ -71,6 +71,18 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
+## Code Quality Hooks
+
+Every commit runs through two Husky hooks:
+
+- **`pre-commit`** → `lint-staged` lints and formats only the files staged in the current commit:
+  - `*.{ts,tsx,js,jsx,cjs,mjs}` → `eslint --fix --max-warnings 0` then `prettier --write`
+  - `*.{json,md,yml,yaml}` → `prettier --write`
+  - `apps/document-ai/**/*.py` → `python -m ruff check --fix`
+- **`commit-msg`** → `commitlint` validates the message against [Conventional Commits](https://www.conventionalcommits.org/).
+
+CI runs the full `turbo run lint` across every workspace on every PR — so even if a developer bypasses the local hook with `--no-verify`, broken code can't merge.
+
 ## Commit Convention
 
 This repo enforces [Conventional Commits](https://www.conventionalcommits.org/) via [commitlint](https://commitlint.js.org/) wired into a Husky `commit-msg` hook ([commitlint.config.js](commitlint.config.js)). Non-conforming commit messages are rejected.
