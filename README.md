@@ -36,12 +36,18 @@ botstackhq/
 - Node.js >= 20
 - npm >= 10
 - Python >= 3.11 (for the Document AI service)
+- AWS CLI configured against an `ap-south-1` profile (for `infrastructure/` work)
 
 ## Getting Started
 
 ```bash
 # Install all workspace dependencies
 npm install
+
+# Copy env templates per app and fill in local values
+cp apps/backend/.env.example     apps/backend/.env
+cp apps/frontend/.env.example    apps/frontend/.env
+cp apps/document-ai/.env.example apps/document-ai/.env
 
 # Build every app/package via Turborepo
 npm run build        # → turbo run build
@@ -52,6 +58,8 @@ npm run test
 npm run dev          # runs each app's dev task
 npm run format
 ```
+
+Each app's `.env.example` is the canonical list of variables it expects, with descriptions. Real values live in `.env` (gitignored). Production secrets live in **AWS Secrets Manager** — see each app's README for the secret naming convention.
 
 ## Per-app commands
 
@@ -107,3 +115,34 @@ fix(frontend): correct status badge color for overdue filings
 chore: bump turbo to 2.9.16
 docs(add): clarify reminder cadence
 ```
+
+## Deployment
+
+All AWS resources are provisioned via **AWS CDK** in [`infrastructure/`](infrastructure/) — region **`ap-south-1` (Mumbai)** is locked by data residency. There is **no manual AWS console configuration**: if a resource isn't in CDK, it doesn't exist.
+
+Three environments are parameterized in the CDK app: `development`, `staging`, `production`.
+
+### Provision / update infrastructure
+
+```bash
+cd infrastructure
+npm run synth        # synthesize CloudFormation
+npm run diff         # diff against the deployed stack
+npm run deploy       # deploy current synth
+```
+
+### Application deploys (CI/CD)
+
+Application code ships via **GitHub Actions** workflows in [`.github/workflows/`](.github/workflows). Branch strategy is `main` → production, `staging` → staging, feature branches → PR previews where applicable.
+
+| App                | Artifact                      | Target                              |
+| ------------------ | ----------------------------- | ----------------------------------- |
+| `apps/backend`     | Lambda (zip via `nest build`) | API Gateway (REST + WebSocket)      |
+| `apps/frontend`    | Static bundle (`vite build`)  | S3 + CloudFront (OAC)               |
+| `apps/document-ai` | Container image (ECR)         | Containerized Lambda, async via SQS |
+
+### Secrets
+
+All production secrets — DB credentials, AuthKit/WorkOS API key, WhatsApp tokens, OpenAI/Anthropic keys — live in **AWS Secrets Manager** and are referenced by name in each app's environment (see the `_SECRET_NAME` variables in each app's `.env.example`). Plaintext secrets are never committed and never set as raw Lambda env vars.
+
+See [`docs/BotStackHQ_ComplianceStack_Architecture_Decision_Document.md`](docs/BotStackHQ_ComplianceStack_Architecture_Decision_Document.md) §15–18 for the authoritative CI/CD, monitoring, and security/residency design.
