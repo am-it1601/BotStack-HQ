@@ -70,3 +70,28 @@ python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\act
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
+
+## Commit Convention
+
+This repo enforces [Conventional Commits](https://www.conventionalcommits.org/) via [commitlint](https://commitlint.js.org/) wired into a Husky `commit-msg` hook ([commitlint.config.js](commitlint.config.js)). Non-conforming commit messages are rejected.
+
+Format:
+
+```
+<type>(<optional-scope>): <subject>
+
+<optional body>
+
+<optional footer>
+```
+
+Allowed `<type>` values: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`.
+
+Examples:
+
+```
+feat(backend): add filing calendar engine
+fix(frontend): correct status badge color for overdue filings
+chore: bump turbo to 2.9.16
+docs(add): clarify reminder cadence
+```
