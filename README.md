@@ -36,6 +36,7 @@ botstackhq/
 - Node.js >= 20
 - npm >= 10
 - Python >= 3.11 (for the Document AI service)
+- Docker Desktop (or a Docker Engine + Compose v2 install) — runs the local PostgreSQL instance
 - AWS CLI configured against an `ap-south-1` profile (for `infrastructure/` work)
 
 ## Getting Started
@@ -49,6 +50,9 @@ cp apps/backend/.env.example     apps/backend/.env
 cp apps/frontend/.env.example    apps/frontend/.env
 cp apps/document-ai/.env.example apps/document-ai/.env
 
+# Start the local PostgreSQL (PostgreSQL 16 + pgvector) — see "Local database" below
+docker compose up -d
+
 # Build every app/package via Turborepo
 npm run build        # → turbo run build
 
@@ -60,6 +64,37 @@ npm run format
 ```
 
 Each app's `.env.example` is the canonical list of variables it expects, with descriptions. Real values live in `.env` (gitignored). Production secrets live in **AWS Secrets Manager** — see each app's README for the secret naming convention.
+
+## Local database
+
+A root-level [`docker-compose.yml`](docker-compose.yml) provisions a local PostgreSQL 16 instance with the [`pgvector`](https://github.com/pgvector/pgvector) extension available — the same major version and extension set we run on AWS RDS in `ap-south-1`. Run the full stack locally without touching cloud resources.
+
+**Connection string for `apps/backend/.env`:**
+
+```
+DATABASE_URL=postgresql://postgres:localdev@localhost:5432/botstackhq?schema=public
+```
+
+**Usage:**
+
+```bash
+# Start the database in the background (first run pulls the image)
+docker compose up -d
+
+# Watch logs
+docker compose logs -f postgres
+
+# Open a psql shell
+docker compose exec postgres psql -U postgres -d botstackhq
+
+# Stop the container (data preserved in the postgres_data volume)
+docker compose down
+
+# Stop and wipe the database (deletes the volume — fresh state next start)
+docker compose down -v
+```
+
+Schema creation is handled by **Prisma migrations** in `apps/backend` (Sprint 1) — not by an `init.sql` in this Compose file. Compose's only responsibility is to give you a clean Postgres instance on `localhost:5432`. Once the migration tooling lands, you'll run `prisma migrate dev` against this same container.
 
 ## Per-app commands
 
