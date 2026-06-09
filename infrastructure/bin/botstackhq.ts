@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
+import { BotStackHqApiStack } from '../lib/botstackhq-api-stack';
 import { BotStackHqBootstrapStack, EnvName } from '../lib/botstackhq-bootstrap-stack';
 import { BotStackHqDataStack } from '../lib/botstackhq-data-stack';
 import { BotStackHqDnsStack } from '../lib/botstackhq-dns-stack';
@@ -61,6 +62,14 @@ new BotStackHqDataStack(app, `BotStackHqData-${envShort}`, {
   vpc: networkStack.vpc,
   env,
   description: `BotStackHQ ${envName} RDS PostgreSQL 16 + pgvector (db.t4g.medium, KMS, private). ClickUp 86d34yr3z.`,
+});
+
+// API tier: NestJS backend Lambda + API Gateway REST (/v1/*) + WebSocket
+// ($connect/$disconnect/$default). ClickUp 86d34ytmy.
+new BotStackHqApiStack(app, `BotStackHqApi-${envShort}`, {
+  envName,
+  env,
+  description: `BotStackHQ ${envName} API Gateway (REST + WebSocket) + NestJS backend Lambda. ClickUp 86d34ytmy.`,
 });
 
 new BotStackHqStack(app, 'BotStackHqStack', { env });
