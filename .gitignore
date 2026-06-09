@@ -29,6 +29,9 @@ apps/document-ai/Python/
 .env.*
 !.env.example
 
+# Local secrets — never commit (holds live API keys / tokens)
+key.yml
+
 # Logs
 *.log
 npm-debug.log*
