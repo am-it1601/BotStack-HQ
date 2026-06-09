@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 import { BotStackHqBootstrapStack, EnvName } from '../lib/botstackhq-bootstrap-stack';
+import { BotStackHqDataStack } from '../lib/botstackhq-data-stack';
 import { BotStackHqDnsStack } from '../lib/botstackhq-dns-stack';
 import { BotStackHqEdgeCertStack } from '../lib/botstackhq-edge-cert-stack';
+import { BotStackHqNetworkStack } from '../lib/botstackhq-network-stack';
 import { BotStackHqStack } from '../lib/botstackhq-stack';
 
 const app = new cdk.App();
@@ -44,6 +46,21 @@ new BotStackHqEdgeCertStack(app, 'BotStackHqEdgeCert', {
   hostedZone: dnsStack.hostedZone,
   crossRegionReferences: true,
   description: `BotStackHQ us-east-1 ACM cert for CloudFront dashboard. ClickUp 86d34yd9d.`,
+});
+
+// Platform VPC + RDS PostgreSQL 16 (env-specific). Deploy order: Bootstrap
+// (creates the DB credentials secret) → Network → Data. ClickUp 86d34yr3z.
+const networkStack = new BotStackHqNetworkStack(app, `BotStackHqNetwork-${envShort}`, {
+  envName,
+  env,
+  description: `BotStackHQ ${envName} VPC (private-isolated subnets, no NAT). ClickUp 86d34yr3z.`,
+});
+
+new BotStackHqDataStack(app, `BotStackHqData-${envShort}`, {
+  envName,
+  vpc: networkStack.vpc,
+  env,
+  description: `BotStackHQ ${envName} RDS PostgreSQL 16 + pgvector (db.t4g.medium, KMS, private). ClickUp 86d34yr3z.`,
 });
 
 new BotStackHqStack(app, 'BotStackHqStack', { env });

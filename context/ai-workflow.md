@@ -55,9 +55,11 @@ Every task follows this loop. ClickUp is the live progress tracker — steps 1 a
 3. LOAD      → Read only the relevant context (Section 1).
 4. VERIFY    → Is this in-scope per MVP Scope Lock? If OUT/PARTIAL, STOP and flag.
 5. PLAN      → State the approach in 2–4 lines before writing code.
-6. BUILD     → Implement following the loaded standards.
-7. SELF-CHECK→ Lint, types, tests pass. No scope creep. No new deps without flagging.
-8. CLOSE OUT → Write report md to context/report/ (Section 4),
+6. Create a new branch for the ticket from latest develop(sync develop first from remote if behind)
+7. BUILD     → Implement following the loaded standards.
+8. SELF-CHECK→ Lint, types, tests pass. No scope creep. No new deps without flagging.
+9. commit the changes.
+10. CLOSE OUT → Write report md to context/report/ (Section 4),
                post summary comment to the ClickUp task, move it to "Review",
                log deferrals to context/Backlog.md (Section 5).
 ```

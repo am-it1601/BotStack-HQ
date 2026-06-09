@@ -70,6 +70,19 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.node } },
   },
 
+  // 5b — CommonJS Node scripts (ops tooling). `require`/module.exports are the
+  // point here, so disable the ESM-import rule for them.
+  {
+    files: ['**/*.cjs'],
+    languageOptions: {
+      globals: { ...globals.node },
+      sourceType: 'commonjs',
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+
   // 6 — Prettier compat (must be last)
   prettier,
 );
