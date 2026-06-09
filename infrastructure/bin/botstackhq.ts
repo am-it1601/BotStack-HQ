@@ -1,15 +1,68 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
+import { BotStackHqBootstrapStack, EnvName } from '../lib/botstackhq-bootstrap-stack';
+import { BotStackHqDataStack } from '../lib/botstackhq-data-stack';
+import { BotStackHqDnsStack } from '../lib/botstackhq-dns-stack';
+import { BotStackHqEdgeCertStack } from '../lib/botstackhq-edge-cert-stack';
+import { BotStackHqNetworkStack } from '../lib/botstackhq-network-stack';
 import { BotStackHqStack } from '../lib/botstackhq-stack';
 
 const app = new cdk.App();
 
-new BotStackHqStack(app, 'BotStackHqStack', {
-  // Region locked to ap-south-1 (Mumbai) per ADD §18 Data Residency & Compliance.
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION ?? 'ap-south-1',
-  },
+// Region locked to ap-south-1 (Mumbai) per ADD §18 Data Residency & Compliance.
+// Hardcoded — never read from CDK_DEFAULT_REGION/AWS_REGION env vars to prevent
+// accidental cross-region deploys when a shell session inherits a stale region.
+const env = {
+  account: process.env.CDK_DEFAULT_ACCOUNT,
+  region: 'ap-south-1',
+};
+
+const envName = (app.node.tryGetContext('envName') ?? 'development') as EnvName;
+const envShort = { development: 'dev', staging: 'stg', production: 'prod' }[envName];
+
+// The apex domain is a single global resource (one registered domain, one zone),
+// so it is not env-suffixed. Overridable via `-c domainName=...` for non-prod zones.
+const domainName = (app.node.tryGetContext('domainName') ?? 'botstackhq.com') as string;
+
+new BotStackHqBootstrapStack(app, `BotStackHqBootstrap-${envShort}`, {
+  envName,
+  alertsEmail: 'amit.agarwal@ciphercru.com',
+  env,
+  description: `BotStackHQ ${envName} account bootstrap — SNS alerts topic + cost budget. Sprint 0.`,
 });
+
+const dnsStack = new BotStackHqDnsStack(app, 'BotStackHqDns', {
+  env,
+  domainName,
+  crossRegionReferences: true,
+  description: `BotStackHQ Route 53 hosted zone + ap-south-1 ACM certs (api, wh). ClickUp 86d34yd9d.`,
+});
+
+// CloudFront mandates us-east-1 certs; this stack is pinned there and validates
+// against the ap-south-1 zone via cross-region references (ADD §10, §18).
+new BotStackHqEdgeCertStack(app, 'BotStackHqEdgeCert', {
+  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: 'us-east-1' },
+  domainName,
+  hostedZone: dnsStack.hostedZone,
+  crossRegionReferences: true,
+  description: `BotStackHQ us-east-1 ACM cert for CloudFront dashboard. ClickUp 86d34yd9d.`,
+});
+
+// Platform VPC + RDS PostgreSQL 16 (env-specific). Deploy order: Bootstrap
+// (creates the DB credentials secret) → Network → Data. ClickUp 86d34yr3z.
+const networkStack = new BotStackHqNetworkStack(app, `BotStackHqNetwork-${envShort}`, {
+  envName,
+  env,
+  description: `BotStackHQ ${envName} VPC (private-isolated subnets, no NAT). ClickUp 86d34yr3z.`,
+});
+
+new BotStackHqDataStack(app, `BotStackHqData-${envShort}`, {
+  envName,
+  vpc: networkStack.vpc,
+  env,
+  description: `BotStackHQ ${envName} RDS PostgreSQL 16 + pgvector (db.t4g.medium, KMS, private). ClickUp 86d34yr3z.`,
+});
+
+new BotStackHqStack(app, 'BotStackHqStack', { env });
 
 app.synth();

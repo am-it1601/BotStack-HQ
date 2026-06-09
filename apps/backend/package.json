@@ -7,14 +7,21 @@
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
+    "dev": "nest start --watch",
     "lint": "eslint . --max-warnings 0",
-    "test": "node -e \"process.exit(0)\""
+    "test": "node -e \"process.exit(0)\"",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:reset": "prisma migrate reset",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@botstackhq/shared-types": "*",
     "@nestjs/common": "^10.4.4",
     "@nestjs/core": "^10.4.4",
     "@nestjs/platform-express": "^10.4.4",
+    "@prisma/client": "^6.5.0",
     "@vendia/serverless-express": "^4.12.6",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
@@ -24,6 +31,7 @@
     "@nestjs/schematics": "^10.1.4",
     "@types/aws-lambda": "^8.10.145",
     "@types/node": "^20.16.5",
+    "prisma": "^6.5.0",
     "typescript": "^5.5.4"
   }
 }

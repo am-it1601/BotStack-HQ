@@ -33,33 +33,119 @@ botstackhq/
 
 ## Prerequisites
 
-- Node.js >= 20
-- npm >= 10
-- Python >= 3.11 (for the Document AI service)
-- AWS CLI configured against an `ap-south-1` profile (for `infrastructure/` work)
+- **Node.js 20 LTS** — version pinned in [`.nvmrc`](.nvmrc); run `nvm use` (or `fnm use`) at the repo root to select it.
+- **npm >= 10** — ships with Node 20; this monorepo uses **npm workspaces** (not pnpm/yarn).
+- **Python 3.11** (Document AI service) — version pinned in [`apps/document-ai/.python-version`](apps/document-ai/.python-version); `pyenv` selects it automatically inside that folder.
+- **Docker Desktop** (or Docker Engine + Compose v2) — runs the local PostgreSQL instance.
+- **AWS CLI v2** configured against an `ap-south-1` profile (only needed for `infrastructure/` work).
 
-## Getting Started
+## Local setup — clone to running in under 30 minutes
+
+The canonical path to a working local environment. It targets the runtimes pinned in
+[`.nvmrc`](.nvmrc) (Node 20 LTS) and [`apps/document-ai/.python-version`](apps/document-ai/.python-version) (Python 3.11).
+
+**1. Clone the repo**
 
 ```bash
-# Install all workspace dependencies
-npm install
+git clone <repo-url> botstackhq && cd botstackhq
+```
 
-# Copy env templates per app and fill in local values
+**2. Select the pinned runtimes**
+
+```bash
+nvm use            # reads .nvmrc → Node 20 LTS  (run `nvm install` first if not installed)
+# Python 3.11 (Document AI) is pinned in apps/document-ai/.python-version;
+# pyenv users: `pyenv install 3.11` once, then it auto-selects inside that folder.
+```
+
+**3. Install all workspace dependencies** — one command installs the whole monorepo
+
+```bash
+npm install        # npm workspaces → apps/*, packages/*, and infrastructure
+```
+
+**4. Configure environment variables**
+
+```bash
 cp apps/backend/.env.example     apps/backend/.env
 cp apps/frontend/.env.example    apps/frontend/.env
 cp apps/document-ai/.env.example apps/document-ai/.env
+```
 
-# Build every app/package via Turborepo
-npm run build        # → turbo run build
+Each app's `.env.example` is the canonical, documented list of variables it expects. Fill in local
+values; real secrets are never committed (see [Secrets](#secrets)).
 
-# Other pipelines
-npm run lint
-npm run test
-npm run dev          # runs each app's dev task
-npm run format
+**5. Start the local database**
+
+```bash
+docker compose up -d        # PostgreSQL 16 + pgvector on localhost:5432 — see "Local database" below
+```
+
+**6. Run database migrations** _(Sprint 1)_
+
+```bash
+npm run db:migrate --workspace=@botstackhq/backend   # Prisma migrate
+```
+
+**7. Seed baseline data** _(Sprint 1)_
+
+```bash
+npm run db:seed --workspace=@botstackhq/backend      # seed dev data
+```
+
+> **Steps 6–7 land in Sprint 1.** Prisma migrations/seed tooling lives in `apps/backend` and does not
+> exist yet — until then the Compose Postgres comes up empty and these steps are no-ops. They are
+> documented here so the end-to-end flow is complete the moment that tooling lands.
+
+**8. Run the apps**
+
+```bash
+npm run dev        # turbo run dev — starts backend (NestJS, :3000) + frontend (Vite, :5173) concurrently
+```
+
+The Python Document AI service runs separately — see [Document AI (Python)](#document-ai-python).
+
+### Other root commands
+
+```bash
+npm run build      # turbo run build — build every app/package
+npm run lint       # turbo run lint
+npm run test       # turbo run test
+npm run format     # prettier across the repo
 ```
 
 Each app's `.env.example` is the canonical list of variables it expects, with descriptions. Real values live in `.env` (gitignored). Production secrets live in **AWS Secrets Manager** — see each app's README for the secret naming convention.
+
+## Local database
+
+A root-level [`docker-compose.yml`](docker-compose.yml) provisions a local PostgreSQL 16 instance with the [`pgvector`](https://github.com/pgvector/pgvector) extension available — the same major version and extension set we run on AWS RDS in `ap-south-1`. Run the full stack locally without touching cloud resources.
+
+**Connection string for `apps/backend/.env`:**
+
+```
+DATABASE_URL=postgresql://postgres:localdev@localhost:5432/botstackhq?schema=public
+```
+
+**Usage:**
+
+```bash
+# Start the database in the background (first run pulls the image)
+docker compose up -d
+
+# Watch logs
+docker compose logs -f postgres
+
+# Open a psql shell
+docker compose exec postgres psql -U postgres -d botstackhq
+
+# Stop the container (data preserved in the postgres_data volume)
+docker compose down
+
+# Stop and wipe the database (deletes the volume — fresh state next start)
+docker compose down -v
+```
+
+Schema creation is handled by **Prisma migrations** in `apps/backend` (Sprint 1) — not by an `init.sql` in this Compose file. Compose's only responsibility is to give you a clean Postgres instance on `localhost:5432`. Once the migration tooling lands, you'll run `prisma migrate dev` against this same container.
 
 ## Per-app commands
 
