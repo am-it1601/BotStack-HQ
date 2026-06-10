@@ -211,3 +211,194 @@ The shape language is **Soft (0.25rem)**, striking a balance between industrial 
 - **Timeline/Calendar:** Use vertical lines with circular status nodes to visualize the "Filing Calendar."
 - **WhatsApp Preview:** A specialized card component that mimics the WhatsApp chat interface to preview agent interactions before they go live.
 - **Action Hero:** For the landing page, use high-resolution, professional photography of modern office environments or architects at work, overlaid with crisp UI mockups.
+
+---
+
+## System Architecture & Scope
+
+**Design System Name:** Precision Minimalist (locked)
+
+**Fidelity:** Hi-fi designs only (no wireframes). Component system is shadcn/ui, so hi-fi is composition + theming. This skips the low-fi → hi-fi round trip and enables near-buildable Figma-to-code mapping.
+
+**Core Principle:** Token-driven design with no arbitrary values. All tokenized properties (colors, spacing, typography, radius) must reference the design system tokens. This ensures clean Figma-to-Tailwind code generation.
+
+---
+
+## Breakpoint Strategy
+
+The design hierarchy is **desktop-first with graceful degradation**:
+
+- **1440px Desktop:** The hi-fi deliverable. All screens, all component states (empty, loading, error, populated), all role variants designed at this breakpoint.
+- **768px Tablet:** Degradation rules + key frames only. Specify how layouts reflow, touch targets scale, and navigation adapts (no full redesign).
+- **375px Mobile:** Deferred to Phase 2+. Users are desk-bound; clients interact via WhatsApp only. Mobile app is out of Phase 1 scope.
+
+**Implementation:** Use Tailwind breakpoints (`md:` / `lg:`) to apply degradation rules. No arbitrary responsive values.
+
+---
+
+## Role-Based UI Deltas
+
+The dashboard adapts per user role. Annotate role-specific UI changes on the CA_OWNER frame for every screen.
+
+### Role Definitions
+
+| Role              | Access                      | Filing Actions                            | Team/Settings             | Direct Messaging       | Visibility                            |
+| ----------------- | --------------------------- | ----------------------------------------- | ------------------------- | ---------------------- | ------------------------------------- |
+| **CA_OWNER**      | Full workspace, all clients | Approve filings                           | ✅ Manage team + settings | ✅ Live chat           | Full controls visible                 |
+| **JUNIOR_CA**     | Assigned clients only       | Submit for approval (cannot self-approve) | ❌ Hidden                 | ✅ Escalation only     | Role-restricted controls              |
+| **SUPPORT_STAFF** | All clients                 | ❌ Read + escalation only                 | ❌ Hidden                 | ❌ No direct messaging | Action controls hidden (not disabled) |
+
+### UI Implementation
+
+- Use `@Roles()` metadata on frontend to gate visibility.
+- Hidden controls → CSS `hidden` (not `disabled`). Disabled controls imply "you can't do this"; hidden implies "this role doesn't do that."
+- Escalation actions remain available to JUNIOR_CA and SUPPORT_STAFF where specified.
+
+---
+
+## Filing Status Legend
+
+The filing lifecycle maps to 5 semantic status buckets. These are **locked** and drive the color-coded calendar view.
+
+| Bucket            | Semantic      | Color Token                                    | FilingStatus Values                                        | Meaning                                       |
+| ----------------- | ------------- | ---------------------------------------------- | ---------------------------------------------------------- | --------------------------------------------- |
+| **Upcoming**      | neutral       | `status-info` (oklch(0.6231 0.188 259.81))     | `UPCOMING`                                                 | Scheduled for future action                   |
+| **In Progress**   | informational | `status-info`                                  | `INPUT_TRIGGERED`, `INPUT_ACKNOWLEDGED`, `INPUTS_RECEIVED` | CA awaiting client inputs or agent processing |
+| **Action Needed** | attention     | `status-warning` (oklch(0.7686 0.1647 70.08))  | `INPUTS_COMPLETE`, `PENDING_APPROVAL`                      | Client data ready; approval or filing needed  |
+| **At Risk**       | danger        | `status-error` (oklch(0.6368 0.2078 25.33))    | `INPUTS_OVERDUE`, `AT_RISK`                                | Deadline at risk or inputs overdue            |
+| **Done**          | success       | `status-success` (oklch(0.6959 0.1491 162.48)) | `FILED`, `CONFIRMED`                                       | Filing completed and confirmed                |
+
+### Display Rules
+
+- **Calendar Grid:** Show 5-color buckets (row or column stripe).
+- **Detail Drawer:** Show granular `FilingStatus` value (e.g., "INPUTS_OVERDUE") with bucket color background + semantic icon.
+- **Status Badge:** Use `label-md` (JetBrains Mono) with background color from the bucket.
+
+---
+
+## Component States Coverage
+
+Every component and screen must be designed in **four states**:
+
+1. **Empty State** — No data available (e.g., no clients, no filings, no conversations). Show a centered icon + short message + optional CTA.
+2. **Loading State** — Data fetching in progress. Use skeleton screens or subtle pulsing on the expected layout. Include a faint background refetch indicator if polling happens post-load.
+3. **Error State** — Failed to load or a user action failed. Inline retry button, clear error message, icon. No full-page crashes.
+4. **Populated State** — Real data displayed. Must show realistic density (don't use placeholder Lorem Ipsum for layouts).
+
+### Implementation
+
+Use conditional rendering in React based on `useQuery` states (`isPending`, `isError`, `data`). Each variant must be visually consistent and use design tokens (never hardcoded fallback styles).
+
+---
+
+## WorkOS AuthKit Integration
+
+Authentication is hosted by **WorkOS AuthKit**. The CA dashboard does not implement login/signup/password reset/MFA—WorkOS hosts these flows.
+
+### Scope: What We Own
+
+1. **Branding Spec for AuthKit:** Define logo, primary/secondary colors, custom CSS for WorkOS-hosted pages (if available). This is the seam between the dashboard and AuthKit.
+2. **App-Side Auth States:**
+   - Post-login (first-time onboarding vs. returning user)
+   - Pending organization member invitation
+   - Active session with valid JWT (scoped by `workspace_id` + role)
+   - Session revocation (deactivation)
+
+### Implementation
+
+- Use the AuthKit client SDK to handle token refresh and session lifecycle.
+- Store JWT in a secure, HTTP-only cookie (per `context/code_standards.md` auth rules).
+- On app load, verify JWT validity; redirect to AuthKit if expired or missing.
+- Display role-aware nav and available screens post-login.
+
+---
+
+## Dashboard Screens & Subtasks
+
+All screens below are designed at **1440px hi-fi fidelity**, with **768px degradation rules**, and **375px deferred**. Organized by design dependency chain.
+
+### Design Dependency Chain
+
+1. **Design Foundations & shadcn Theme** (BLOCKS all others)
+   - Finalize all oklch tokens
+   - Tailwind @theme configuration
+   - Type scale and spacing scale locked
+
+2. **App Shell + Auth States**
+   - Navigation chrome (sidebar or top nav)
+   - Role-based menu items
+   - AuthKit branding spec
+   - Post-login, post-invite, post-session-revocation states
+
+3. **Core Screens** (can proceed in parallel after Foundations + App Shell)
+   - **Filing Calendar Dashboard** — client × filing grid, filter bar, status colors (5 buckets), detail drawer, folded approval queue
+   - **Client Management** — client list, multi-step onboarding form, GSTIN management
+   - **Conversation Monitor + Human Handoff** — conversation list, message thread, escalation banner, human takeover UI
+   - **Document Viewer** — document list, PDF preview panel, extracted fields panel, validation highlights
+   - **Team Management** — member list, invite flow, role assignment, client assignment
+   - **Workspace Settings** — agent name, escalation threshold, language, WhatsApp config
+
+4. **Cross-Cutting** (design once, apply everywhere)
+   - **Navigation Flow Map** — breadcrumbs, back navigation, modal vs. drawer patterns (see below)
+   - **Component States Coverage** — empty, loading, error, populated for all components
+
+### Screen Details
+
+See the subtasks in ClickUp task **86d34yg2k** for full design briefs and acceptance criteria per screen.
+
+---
+
+## Navigation Patterns
+
+### Breadcrumbs
+
+Use for screens nested under a parent (e.g., Filing Detail under Filing Calendar). Format: `Calendar > Client Name > Filing Name`. Click to jump back.
+
+### Back Navigation
+
+- **Modals:** Include a close button (X) in the top-right. Never use back button inside a modal.
+- **Drawers (Slide-Out Panels):** Include a back arrow or close button in the header. Drawers can nest (e.g., Filing Calendar → Filing Detail → Conversation Thread), but keep nesting ≤ 2 levels to avoid cognitive overload.
+- **Full-Page Screens:** Breadcrumb or sidebar nav (not a redundant back button).
+
+### Modal vs. Drawer
+
+- **Modal:** Finite, self-contained actions (confirm delete, quick form submission). Full-page overlay, centered, dismissible.
+- **Drawer:** Detailed views or multi-step flows (filing detail, client onboarding, team member editing). Slide from right or bottom, maintains context of the parent screen behind it.
+
+### Menu & Navigation
+
+- **Primary Navigation:** Role-aware sidebar or top nav. Show only menu items for the user's role.
+- **Workspace Switcher:** If multi-workspace is supported, include a switcher in the nav (deferred to Phase 2 if single-workspace MVP).
+- **User Menu:** Profile, settings, logout. Typically in the top-right or sidebar footer.
+
+---
+
+## Figma-to-Code Handoff
+
+### Principles
+
+1. **Use Design Tokens Everywhere:** Every color, spacing, font size, radius must reference a named token. No hardcoded `#hex`, `px` values, or `rem` calculations.
+2. **Component Naming:** Name Figma components to match shadcn/ui component names (e.g., `Button`, `Input`, `Card`, `Badge`). This eases handoff to `shadcn/ui` + Tailwind.
+3. **Variant Coverage:** For shadcn components (Button, Input, etc.), design all variants (primary, secondary, outline, ghost; enabled, disabled, loading, error). Figma variants should map 1:1 to React `props`.
+4. **Responsive Annotations:** Document breakpoint behavior in the design (e.g., "At 768px, button width is 100% of container" or "Sidebar collapses to hamburger menu").
+5. **Interaction States:** Hover, focus, active, disabled. Show all four states side-by-side for each component.
+6. **No Arbitrary Values:** Every visual property must map to a Tailwind class or token. If you need `py-2.5`, ask: does a 10px spacing value exist in the design system? If not, adjust to the nearest token or add the token to Foundations.
+
+### Handoff Artifacts
+
+- **Figma File:** One Figma file per screen (or grouped by dashboard section). Use Figma's "Dev Mode" to expose tokens and component structure.
+- **Design System Library:** A separate Figma file for Foundations (colors, typography, spacing, components) that all screen files link to.
+- **Token Export:** Export oklch tokens as CSS custom properties (or JSON for Tailwind config).
+- **Implementation Notes:** Add Figma comments on complex interactions or animations (fade-ins, transitions, etc.).
+
+---
+
+## Acceptance Criteria (Design Phase)
+
+- ✅ All screens designed hi-fi at 1440px, token-driven, no arbitrary values
+- ✅ 768px degradation rules + key frames documented; 375px deferred
+- ✅ Component states covered: empty, loading, error, populated (on all screens)
+- ✅ Navigation flow mapped (breadcrumbs, back nav, modal/drawer patterns)
+- ✅ Filing detail drawer designed with granular status display
+- ✅ Role deltas annotated per screen (CA_OWNER / JUNIOR_CA / SUPPORT_STAFF)
+- ✅ Designs reviewed and approved before React implementation begins
