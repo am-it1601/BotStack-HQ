@@ -35,7 +35,12 @@ botstackhq/
 ## Prerequisites
 
 - **Node.js 20 LTS** — version pinned in [`.nvmrc`](.nvmrc); run `nvm use` (or `fnm use`) at the repo root to select it.
-- **pnpm >= 9** — fast, efficient package manager for this monorepo; installed globally via `npm install -g pnpm` or `corepack enable && corepack prepare pnpm@latest --activate`.
+- **pnpm >= 9** — fast, efficient package manager for this monorepo. Enable via **corepack** (recommended):
+  ```bash
+  corepack enable
+  ```
+  This activates Node.js's built-in package manager support and uses the pinned pnpm version (`9.10.0`) from `package.json`.
+  - Alternative: `npm install -g pnpm` (global install).
 - **Python 3.11** (Document AI service) — version pinned in [`apps/document-ai/.python-version`](apps/document-ai/.python-version); `pyenv` selects it automatically inside that folder.
 - **Docker Desktop** (or Docker Engine + Compose v2) — runs the local PostgreSQL instance.
 - **AWS CLI v2** configured against an `ap-south-1` profile (only needed for `infrastructure/` work).
@@ -101,18 +106,40 @@ pnpm --filter @botstackhq/backend db:seed           # seed dev data
 **8. Run the apps**
 
 ```bash
-pnpm dev           # turbo run dev — starts backend (NestJS, :3000) + frontend (Vite, :5173) concurrently
+pnpm dev                    # Start both backend (NestJS, :3000) + frontend (Vite, :5173) concurrently
+pnpm dev:backend            # Start backend only
+pnpm dev:frontend           # Start frontend only
 ```
 
 The Python Document AI service runs separately — see [Document AI (Python)](#document-ai-python).
 
-### Other root commands
+### All root commands
+
+**Development:**
 
 ```bash
-pnpm build         # turbo run build — build every app/package
-pnpm lint          # turbo run lint
-pnpm test          # turbo run test
-pnpm format        # prettier across the repo
+pnpm dev                    # turbo run dev — start all apps concurrently
+pnpm dev:backend            # turbo run dev --filter=@botstackhq/backend — start backend only
+pnpm dev:frontend           # turbo run dev --filter=@botstackhq/frontend — start frontend only
+```
+
+**Building & checking:**
+
+```bash
+pnpm build                  # turbo run build — build every app/package
+pnpm lint                   # turbo run lint
+pnpm test                   # turbo run test
+pnpm format                 # prettier across the repo
+pnpm format:check           # check formatting without writing
+```
+
+**Dependency management:**
+
+```bash
+pnpm install                # Install all workspace dependencies
+pnpm update                 # Update all dependencies (all workspaces)
+pnpm update:backend         # pnpm --filter @botstackhq/backend update
+pnpm update:frontend        # pnpm --filter @botstackhq/frontend update
 ```
 
 Each app's `.env.example` is the canonical list of variables it expects, with descriptions. Real values live in `.env` (gitignored). Production secrets live in **AWS Secrets Manager** — see each app's README for the secret naming convention.
@@ -150,11 +177,21 @@ Schema creation is handled by **Prisma migrations** in `apps/backend` (Sprint 1)
 
 ## Per-app commands
 
-Run a task for a single workspace with Turborepo filters:
+**Quick scripts** (recommended — use these first):
+
+```bash
+pnpm dev:backend            # Start backend only
+pnpm dev:frontend           # Start frontend only
+pnpm update:backend         # Update backend dependencies
+pnpm update:frontend        # Update frontend dependencies
+```
+
+**Advanced: Turborepo filters** (for any task):
 
 ```bash
 npx turbo run build --filter=@botstackhq/backend
 npx turbo run dev   --filter=@botstackhq/frontend
+npx turbo run lint  --filter=@botstackhq/backend
 ```
 
 ### Document AI (Python)
