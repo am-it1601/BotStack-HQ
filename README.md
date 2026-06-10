@@ -137,10 +137,17 @@ pnpm format:check           # check formatting without writing
 
 ```bash
 pnpm install                # Install all workspace dependencies
-pnpm update                 # Update all dependencies (all workspaces)
-pnpm update:backend         # pnpm --filter @botstackhq/backend update
-pnpm update:frontend        # pnpm --filter @botstackhq/frontend update
+pnpm update                 # Update all dependencies (must run from root)
 ```
+
+**Add a package to a specific workspace:**
+
+```bash
+pnpm --filter @botstackhq/frontend add <package-name>
+pnpm --filter @botstackhq/backend add <package-name>
+```
+
+> **Note:** In a pnpm monorepo with workspace dependencies, `install` and `update` must always run from the root to preserve the workspace resolution graph. Individual workspace updates are not supported because local workspace packages (like `@botstackhq/shared-types`) cannot be resolved when isolated.
 
 Each app's `.env.example` is the canonical list of variables it expects, with descriptions. Real values live in `.env` (gitignored). Production secrets live in **AWS Secrets Manager** — see each app's README for the secret naming convention.
 
@@ -182,9 +189,16 @@ Schema creation is handled by **Prisma migrations** in `apps/backend` (Sprint 1)
 ```bash
 pnpm dev:backend            # Start backend only
 pnpm dev:frontend           # Start frontend only
-pnpm update:backend         # Update backend dependencies
-pnpm update:frontend        # Update frontend dependencies
 ```
+
+**Adding dependencies to a specific workspace:**
+
+```bash
+pnpm --filter @botstackhq/backend add <package>
+pnpm --filter @botstackhq/frontend add <package>
+```
+
+> Always run `pnpm install` and `pnpm update` from the root — workspace dependencies require the full monorepo context.
 
 **Advanced: Turborepo filters** (for any task):
 

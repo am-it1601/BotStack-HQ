@@ -9,8 +9,6 @@
     "dev:frontend": "turbo run dev --filter=@botstackhq/frontend",
     "dev:backend": "turbo run dev --filter=@botstackhq/backend",
     "update": "pnpm update -r",
-    "update:frontend": "pnpm --filter @botstackhq/frontend update",
-    "update:backend": "pnpm --filter @botstackhq/backend update",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
