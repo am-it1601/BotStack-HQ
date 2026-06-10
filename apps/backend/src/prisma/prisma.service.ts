@@ -15,6 +15,9 @@ import { PrismaClient } from '@prisma/client';
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   async onModuleInit(): Promise<void> {
     await this.$connect();
+    // TODO(86d39mgf4): applyRlsMiddleware(this) — register the `SET LOCAL
+    // app.workspace_id` middleware (see common/prisma/rls.middleware.ts) so RLS
+    // is activated on every query. Left unwired while the middleware is a stub.
   }
 
   async onModuleDestroy(): Promise<void> {
