@@ -17,7 +17,8 @@ botstackhq/
 │   └── shared-types/     → Shared TypeScript types across the stack
 ├── .github/workflows/    → CI/CD pipelines (GitHub Actions)
 ├── .husky/               → Git pre-commit hooks
-├── package.json          → Root npm workspace
+├── package.json          → Root pnpm workspace
+├── pnpm-workspace.yaml   → pnpm workspace configuration
 └── turbo.json            → Turborepo task pipeline
 ```
 
@@ -29,12 +30,17 @@ botstackhq/
 | Frontend       | React + TypeScript + TanStack Query + Zustand, built with Vite  |
 | Document AI    | Python FastAPI (PyMuPDF, pdfplumber, Unstructured, pytesseract) |
 | Infrastructure | AWS CDK (TypeScript), region `ap-south-1` (Mumbai)              |
-| Monorepo       | npm workspaces + Turborepo                                      |
+| Monorepo       | pnpm workspaces + Turborepo                                     |
 
 ## Prerequisites
 
 - **Node.js 20 LTS** — version pinned in [`.nvmrc`](.nvmrc); run `nvm use` (or `fnm use`) at the repo root to select it.
-- **npm >= 10** — ships with Node 20; this monorepo uses **npm workspaces** (not pnpm/yarn).
+- **pnpm >= 9** — fast, efficient package manager for this monorepo. Enable via **corepack** (recommended):
+  ```bash
+  corepack enable
+  ```
+  This activates Node.js's built-in package manager support and uses the pinned pnpm version (`9.10.0`) from `package.json`.
+  - Alternative: `npm install -g pnpm` (global install).
 - **Python 3.11** (Document AI service) — version pinned in [`apps/document-ai/.python-version`](apps/document-ai/.python-version); `pyenv` selects it automatically inside that folder.
 - **Docker Desktop** (or Docker Engine + Compose v2) — runs the local PostgreSQL instance.
 - **AWS CLI v2** configured against an `ap-south-1` profile (only needed for `infrastructure/` work).
@@ -61,7 +67,7 @@ nvm use            # reads .nvmrc → Node 20 LTS  (run `nvm install` first if n
 **3. Install all workspace dependencies** — one command installs the whole monorepo
 
 ```bash
-npm install        # npm workspaces → apps/*, packages/*, and infrastructure
+pnpm install       # pnpm workspaces → apps/*, packages/*, and infrastructure
 ```
 
 **4. Configure environment variables**
@@ -84,13 +90,13 @@ docker compose up -d        # PostgreSQL 16 + pgvector on localhost:5432 — see
 **6. Run database migrations** _(Sprint 1)_
 
 ```bash
-npm run db:migrate --workspace=@botstackhq/backend   # Prisma migrate
+pnpm --filter @botstackhq/backend db:migrate        # Prisma migrate
 ```
 
 **7. Seed baseline data** _(Sprint 1)_
 
 ```bash
-npm run db:seed --workspace=@botstackhq/backend      # seed dev data
+pnpm --filter @botstackhq/backend db:seed           # seed dev data
 ```
 
 > **Steps 6–7 land in Sprint 1.** Prisma migrations/seed tooling lives in `apps/backend` and does not
@@ -100,19 +106,48 @@ npm run db:seed --workspace=@botstackhq/backend      # seed dev data
 **8. Run the apps**
 
 ```bash
-npm run dev        # turbo run dev — starts backend (NestJS, :3000) + frontend (Vite, :5173) concurrently
+pnpm dev                    # Start both backend (NestJS, :3000) + frontend (Vite, :5173) concurrently
+pnpm dev:backend            # Start backend only
+pnpm dev:frontend           # Start frontend only
 ```
 
 The Python Document AI service runs separately — see [Document AI (Python)](#document-ai-python).
 
-### Other root commands
+### All root commands
+
+**Development:**
 
 ```bash
-npm run build      # turbo run build — build every app/package
-npm run lint       # turbo run lint
-npm run test       # turbo run test
-npm run format     # prettier across the repo
+pnpm dev                    # turbo run dev — start all apps concurrently
+pnpm dev:backend            # turbo run dev --filter=@botstackhq/backend — start backend only
+pnpm dev:frontend           # turbo run dev --filter=@botstackhq/frontend — start frontend only
 ```
+
+**Building & checking:**
+
+```bash
+pnpm build                  # turbo run build — build every app/package
+pnpm lint                   # turbo run lint
+pnpm test                   # turbo run test
+pnpm format                 # prettier across the repo
+pnpm format:check           # check formatting without writing
+```
+
+**Dependency management:**
+
+```bash
+pnpm install                # Install all workspace dependencies
+pnpm update                 # Update all dependencies (must run from root)
+```
+
+**Add a package to a specific workspace:**
+
+```bash
+pnpm --filter @botstackhq/frontend add <package-name>
+pnpm --filter @botstackhq/backend add <package-name>
+```
+
+> **Note:** In a pnpm monorepo with workspace dependencies, `install` and `update` must always run from the root to preserve the workspace resolution graph. Individual workspace updates are not supported because local workspace packages (like `@botstackhq/shared-types`) cannot be resolved when isolated.
 
 Each app's `.env.example` is the canonical list of variables it expects, with descriptions. Real values live in `.env` (gitignored). Production secrets live in **AWS Secrets Manager** — see each app's README for the secret naming convention.
 
@@ -149,11 +184,28 @@ Schema creation is handled by **Prisma migrations** in `apps/backend` (Sprint 1)
 
 ## Per-app commands
 
-Run a task for a single workspace with Turborepo filters:
+**Quick scripts** (recommended — use these first):
+
+```bash
+pnpm dev:backend            # Start backend only
+pnpm dev:frontend           # Start frontend only
+```
+
+**Adding dependencies to a specific workspace:**
+
+```bash
+pnpm --filter @botstackhq/backend add <package>
+pnpm --filter @botstackhq/frontend add <package>
+```
+
+> Always run `pnpm install` and `pnpm update` from the root — workspace dependencies require the full monorepo context.
+
+**Advanced: Turborepo filters** (for any task):
 
 ```bash
 npx turbo run build --filter=@botstackhq/backend
 npx turbo run dev   --filter=@botstackhq/frontend
+npx turbo run lint  --filter=@botstackhq/backend
 ```
 
 ### Document AI (Python)

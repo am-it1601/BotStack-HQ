@@ -37,6 +37,9 @@ export interface ApiError {
 /** Workspace member roles (ADD §12 Authentication & Authorization). */
 export type WorkspaceRole = 'workspace_owner' | 'ca_admin' | 'ca_member' | 'agency_admin';
 
+/** Workspace member roles as returned by backend (Prisma enum — synchronized). */
+export type PrismaWorkspaceRole = 'CA_OWNER' | 'JUNIOR_CA' | 'SUPPORT_STAFF';
+
 /** Compliance filing types supported in Phase 1 (ADD §08, Product Overview). */
 export type FilingType = 'GSTR-1' | 'GSTR-3B' | 'TDS' | 'ADVANCE_TAX' | 'ITR' | 'FORM_16';
 
@@ -56,7 +59,56 @@ export type ReminderStage = 'T-12' | 'T-7' | 'T-3' | 'post-filing';
 export interface JwtClaims {
   sub: string;
   workspace_id: string;
-  role: WorkspaceRole;
+  role: PrismaWorkspaceRole;
   permissions: string[];
   org_id: string;
+}
+
+/** Workspace response DTO from backend. */
+export interface WorkspaceResponseDto {
+  id: string;
+  name: string;
+  slug: string;
+  agentName: string;
+  agentGreeting: string | null;
+  escalationThreshold: string;
+  defaultLanguage: string;
+  plan: string;
+  whatsappVerified: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Workspace member response DTO from backend. */
+export interface WorkspaceMemberResponseDto {
+  id: string;
+  userId: string;
+  email: string;
+  fullName: string;
+  role: PrismaWorkspaceRole;
+  isActive: boolean;
+  invitedAt: string;
+  joinedAt: string | null;
+}
+
+/** Request DTO for inviting a new workspace member. */
+export interface InviteMemberDto {
+  email: string;
+  fullName: string;
+  role: PrismaWorkspaceRole;
+}
+
+/** Request DTO for updating a workspace member. */
+export interface UpdateMemberDto {
+  role?: PrismaWorkspaceRole;
+  isActive?: boolean;
+}
+
+/** Request DTO for updating workspace settings. */
+export interface UpdateWorkspaceDto {
+  agentName?: string;
+  agentGreeting?: string | null;
+  escalationThreshold?: string;
+  defaultLanguage?: string;
 }
