@@ -6,6 +6,8 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:frontend": "turbo run dev --filter=@botstackhq/frontend",
+    "dev:backend": "turbo run dev --filter=@botstackhq/backend",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
